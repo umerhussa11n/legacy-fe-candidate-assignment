@@ -24,6 +24,7 @@ This is a full-stack Web3 application that allows users to:
 4. **View signature history** with verification status
 
 ### Key Features
+
 - 🔐 Headless Dynamic.xyz authentication
 - ✍️ Message signing with wallet
 - ✅ Signature verification via REST API
@@ -35,16 +36,19 @@ This is a full-stack Web3 application that allows users to:
 ## ✅ Current Progress
 
 ### Completed ✓
+
 - [x] **Monorepo Foundation**: Yarn 4 workspaces configured
 - [x] **Shared Package Structure**: Basic setup with Jest and TypeScript configs
 - [x] **Frontend App Initialization**: Package.json and basic structure created
 - [x] **Root Configuration**: TypeScript project references and workspace scripts
 
 ### In Progress 🔄
+
 - [ ] **Frontend Dependencies**: Currently installing Tailwind CSS and related packages
 - [ ] **Tailwind Setup**: `npx tailwindcss init -p` command needs to be resolved
 
 ### Next Steps 📋
+
 - [ ] Complete Tailwind CSS configuration
 - [ ] Add shared types and utilities
 - [ ] Implement Dynamic.xyz authentication
@@ -114,8 +118,7 @@ web3-signer-verifier/
 
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd legacy-fe-candidate-assignment
+git clone https://github.com/DM-SaaS/legacy-fe-candidate-assignment.git
 
 # Verify Yarn 4 is set up
 yarn --version  # Should show 4.x.x
@@ -408,11 +411,11 @@ cat > src/index.css << 'EOF'
   .btn-primary {
     @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
   }
-  
+
   .input-field {
     @apply block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500;
   }
-  
+
   .card {
     @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
   }
@@ -572,12 +575,14 @@ The project includes comprehensive testing setup:
 Create `.env` files based on `.env.example`:
 
 **Frontend (.env):**
+
 ```
 VITE_DYNAMIC_ENVIRONMENT_ID=your-dynamic-environment-id
 VITE_API_URL=https://your-backend-url.com
 ```
 
 **Backend (.env):**
+
 ```
 NODE_ENV=production
 PORT=3001
@@ -640,6 +645,7 @@ yarn workspace @web3-signer/shared run build
 #### 4. Dynamic.xyz Environment Issues
 
 Ensure you have:
+
 - Valid Dynamic.xyz Environment ID
 - Correct environment configuration
 - Proper network settings
@@ -670,7 +676,7 @@ Based on your current progress, here are the immediate next steps:
 This setup addresses all the key evaluation areas:
 
 - ✅ **React Architecture**: Clean component design with hooks and contexts
-- ✅ **Dynamic.xyz Usage**: Headless implementation with proper wallet management  
+- ✅ **Dynamic.xyz Usage**: Headless implementation with proper wallet management
 - ✅ **Node.js + Express**: Modular API with proper error handling
 - ✅ **Code Quality**: TypeScript, ESLint, proper organization
 - ✅ **User Experience**: Responsive design with Tailwind CSS
