@@ -1,0 +1,324 @@
+import { renderHook, act } from "@testing-library/react";
+import { useWallet } from "../useWallet";
+
+interface UserProfile {
+  userId?: string;
+  email?: string;
+  walletPublicKey?: string;
+  lastVerifiedCredentialId?: string;
+  sessionId?: string;
+  verifiedCredentials?: any[];
+  missingFields?: string[];
+}
+
+interface Wallet {
+  address: string;
+  signMessage: (message: string) => Promise<string>;
+}
+
+// Get the global mock functions from setupTests
+declare global {
+  var mockConnectWithOtp: jest.MockedFunction<any>;
+  var mockSendOtpToEmail: jest.MockedFunction<any>;
+  var mockHandleLogOut: jest.MockedFunction<any>;
+  var mockSignMessage: jest.MockedFunction<any>;
+  var mockUseDynamicContext: jest.MockedFunction<any>;
+}
+
+const mockUser: UserProfile = {
+  userId: "test-user-123",
+  email: "test@example.com",
+  walletPublicKey: "0x1234567890123456789012345678901234567890",
+  lastVerifiedCredentialId: "test-id",
+  sessionId: "test-session",
+  verifiedCredentials: [],
+  missingFields: [],
+};
+
+const mockWallet: Wallet = {
+  address: "0x1234567890123456789012345678901234567890",
+  signMessage: global.mockSignMessage,
+};
+
+describe("useWallet Hook", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    // Reset mocks to default state
+    global.mockUseDynamicContext.mockReturnValue({
+      user: null,
+      setShowAuthFlow: jest.fn(),
+      primaryWallet: null,
+      handleLogOut: global.mockHandleLogOut,
+    });
+
+    global.mockSendOtpToEmail.mockResolvedValue({ success: true });
+    global.mockConnectWithOtp.mockResolvedValue({
+      user: mockUser,
+      wallet: mockWallet,
+    });
+    global.mockSignMessage.mockResolvedValue("0xsignature123");
+  });
+
+  describe("Initial State", () => {
+    it("should initialize with correct default state", () => {
+      const { result } = renderHook(() => useWallet());
+
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.isConnecting).toBe(false);
+      expect(result.current.wallet).toBe(null);
+      expect(result.current.address).toBe(null);
+      expect(result.current.network).toBe(null);
+      expect(result.current.emailSent).toBe(false);
+      expect(result.current.email).toBe("");
+      expect(result.current.otp).toBe("");
+      expect(result.current.isSigning).toBe(false);
+      expect(result.current.error).toBe(null);
+      expect(result.current.user).toBe(null);
+    });
+  });
+
+  describe("Email Authentication", () => {
+    it("should send OTP when email is provided", async () => {
+      global.mockSendOtpToEmail.mockResolvedValue({ success: true });
+
+      const { result } = renderHook(() => useWallet());
+
+      await act(async () => {
+        await result.current.connectWithEmailAuth("test@example.com");
+      });
+
+      expect(global.mockSendOtpToEmail).toHaveBeenCalledWith("test@example.com");
+      expect(result.current.emailSent).toBe(true);
+      expect(result.current.email).toBe("test@example.com");
+    });
+
+    it("should handle OTP sending errors", async () => {
+      mockSendOtpCode.mockRejectedValue(new Error("Network error"));
+
+      const { result } = renderHook(() => useWallet());
+
+      await act(async () => {
+        await result.current.connectWithEmailAuth("test@example.com");
+      });
+
+      expect(result.current.error).toBe("Failed to send verification code");
+      expect(result.current.emailSent).toBe(false);
+    });
+
+    it("should handle OTP input changes", () => {
+      const { result } = renderHook(() => useWallet());
+
+      act(() => {
+        const event = {
+          target: { value: "123456" },
+        } as React.ChangeEvent<HTMLInputElement>;
+        result.current.verifyEmailOtp(event);
+      });
+
+      expect(result.current.otp).toBe("123456");
+    });
+
+    it("should verify OTP and connect wallet", async () => {
+      mockConnectWithOtp.mockResolvedValue({
+        user: mockUser,
+        wallet: mockWallet,
+      });
+
+      const { result } = renderHook(() => useWallet());
+
+      // First set email and OTP
+      act(() => {
+        result.current.connectWithEmailAuth("test@example.com");
+        const otpEvent = {
+          target: { value: "123456" },
+        } as React.ChangeEvent<HTMLInputElement>;
+        result.current.verifyEmailOtp(otpEvent);
+      });
+
+      await act(async () => {
+        await result.current.verifyEmailOtp("123456");
+      });
+
+      expect(mockConnectWithOtp).toHaveBeenCalledWith({
+        deliveryMethod: "email",
+        email: "test@example.com",
+        otp: "123456",
+      });
+    });
+  });
+
+  describe("Message Signing", () => {
+    it("should sign message when wallet is connected", async () => {
+      mockSignMessage.mockResolvedValue("0xsignature123");
+
+      // Mock authenticated state
+      jest.doMock("@dynamic-labs/sdk-react-core", () => ({
+        useDynamicContext: () => ({
+          user: mockUser,
+          primaryWallet: mockWallet,
+          handleLogOut: mockHandleLogOut,
+        }),
+      }));
+
+      const { result } = renderHook(() => useWallet());
+
+      await act(async () => {
+        const signature = await result.current.signMessage("Hello World");
+        expect(signature).toBe("0xsignature123");
+      });
+
+      expect(mockSignMessage).toHaveBeenCalledWith("Hello World");
+    });
+
+    it("should handle signing errors", async () => {
+      mockSignMessage.mockRejectedValue(new Error("User rejected"));
+
+      // Mock authenticated state
+      jest.doMock("@dynamic-labs/sdk-react-core", () => ({
+        useDynamicContext: () => ({
+          user: mockUser,
+          primaryWallet: mockWallet,
+          handleLogOut: mockHandleLogOut,
+        }),
+      }));
+
+      const { result } = renderHook(() => useWallet());
+
+      await act(async () => {
+        const signature = await result.current.signMessage("Hello World");
+        expect(signature).toBeNull();
+      });
+
+      expect(result.current.error).toBe("Failed to sign message");
+    });
+  });
+
+  describe("Disconnect", () => {
+    it("should disconnect wallet and reset state", async () => {
+      const { result } = renderHook(() => useWallet());
+
+      await act(async () => {
+        result.current.disconnectWallet();
+      });
+
+      expect(mockHandleLogOut).toHaveBeenCalled();
+      expect(result.current.email).toBe("");
+      expect(result.current.otp).toBe("");
+      expect(result.current.emailSent).toBe(false);
+      expect(result.current.error).toBe(null);
+    });
+  });
+
+  describe("Loading States", () => {
+    it("should show connecting state during authentication", async () => {
+      mockSendOtpCode.mockImplementation(
+        () => new Promise((resolve) => setTimeout(resolve, 100))
+      );
+
+      const { result } = renderHook(() => useWallet());
+
+      act(() => {
+        result.current.connectWithEmailAuth("test@example.com");
+      });
+
+      expect(result.current.isConnecting).toBe(true);
+    });
+
+    it("should show signing state during message signing", async () => {
+      mockSignMessage.mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve("0xsig"), 100))
+      );
+
+      // Mock authenticated state
+      jest.doMock("@dynamic-labs/sdk-react-core", () => ({
+        useDynamicContext: () => ({
+          user: mockUser,
+          primaryWallet: mockWallet,
+          handleLogOut: mockHandleLogOut,
+        }),
+      }));
+
+      const { result } = renderHook(() => useWallet());
+
+      act(() => {
+        result.current.signMessage("test message");
+      });
+
+      expect(result.current.isSigning).toBe(true);
+    });
+  });
+
+  describe("Error Handling", () => {
+    it("should clear error when starting new authentication", () => {
+      const { result } = renderHook(() => useWallet());
+
+      // Set an error first
+      act(() => {
+        result.current.error = "Previous error";
+      });
+
+      act(() => {
+        result.current.connectWithEmailAuth("test@example.com");
+      });
+
+      expect(result.current.error).toBe(null);
+    });
+
+    it("should handle network connectivity issues", async () => {
+      mockSendOtpCode.mockRejectedValue(new Error("Network timeout"));
+
+      const { result } = renderHook(() => useWallet());
+
+      await act(async () => {
+        await result.current.connectWithEmailAuth("test@example.com");
+      });
+
+      expect(result.current.error).toBe("Failed to send verification code");
+    });
+
+    it("should handle invalid OTP", async () => {
+      mockConnectWithOtp.mockRejectedValue(new Error("Invalid OTP"));
+
+      const { result } = renderHook(() => useWallet());
+
+      await act(async () => {
+        await result.current.verifyEmailOtp("000000");
+      });
+
+      expect(result.current.error).toBe(
+        "Failed to verify OTP and create wallet"
+      );
+    });
+  });
+
+  describe("State Management", () => {
+    it("should maintain email after OTP is sent", async () => {
+      mockSendOtpCode.mockResolvedValue({ success: true });
+
+      const { result } = renderHook(() => useWallet());
+
+      await act(async () => {
+        await result.current.connectWithEmailAuth("test@example.com");
+      });
+
+      expect(result.current.email).toBe("test@example.com");
+      expect(result.current.emailSent).toBe(true);
+    });
+
+    it("should reset OTP input after successful verification", async () => {
+      mockConnectWithOtp.mockResolvedValue({
+        user: mockUser,
+        wallet: mockWallet,
+      });
+
+      const { result } = renderHook(() => useWallet());
+
+      await act(async () => {
+        await result.current.verifyEmailOtp("123456");
+      });
+
+      expect(result.current.otp).toBe("");
+    });
+  });
+});
