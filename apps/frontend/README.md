@@ -35,3 +35,10 @@ src/
 - **Tailwind CSS** - Utility-first styling
 - **Dynamic.xyz SDK** - Wallet authentication
 - **Shared types** from `@shared` package
+
+## ⚖️ Trade-offs
+
+- **React Router URLs** - Added URL navigation for deep linking, increases complexity but improves UX
+- **Local Storage** - Used localStorage over backend for privacy, trade-off is no cross-device sync
+- **Monorepo Types** - Workspace types ensure API safety but add deployment complexity
+- **Single Page App** - Chose SPA over multi-page for smooth UX, requires client-side routing setup

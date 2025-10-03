@@ -60,3 +60,11 @@ const signerAddress = ethers.verifyMessage(message, signature);
 - **ethers.js v6** - Signature verification
 - **TypeScript** - Type safety
 - **Shared types** from `@shared` package
+
+## ⚖️ Trade-offs
+
+- **In-Memory State** - Using memory over database reduces complexity but limits scalability
+- **CORS Allow All** - Configured for demo purposes, production needs domain allowlist
+- **Signature Only** - Focused on core verification without user management for requirements efficiency
+- **Monorepo Types** - Workspace types ensure safety with frontend but add build coordination
+- **No Rate Limiting** - Simplified for demo, production would need API protection
