@@ -24,12 +24,30 @@ export const MessageSigner: React.FC = () => {
 
     try {
       const signature = await signMessage(message);
+      console.log("🔍 Signature result:", signature);
+      console.log("🔍 Address:", address);
 
       if (signature && address) {
-        addSignature(message, signature, address);
+        console.log("💾 Adding signature to history:", {
+          message,
+          signature,
+          address,
+        });
+        const itemId = addSignature(message, signature, address);
+        console.log("💾 Added with ID:", itemId);
+
+        // Verify it was saved to localStorage
+        const savedHistory = localStorage.getItem("signature-history");
+        console.log("💾 Current localStorage:", savedHistory);
+
         setMessage(""); // Clear the form
         toast.success("🎉 Message signed and added to history!", {
           duration: 4000, // 4 seconds to celebrate success
+        });
+      } else {
+        console.log("❌ Missing signature or address:", {
+          signature: !!signature,
+          address: !!address,
         });
       }
     } catch (error) {

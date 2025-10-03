@@ -13,23 +13,43 @@ export interface SignatureHistoryItem extends SignedMessage {
 export const useSignatureHistory = () => {
   const [history, setHistory] = useState<SignatureHistoryItem[]>([]);
   const [isLoading] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Load history from localStorage on mount
   useEffect(() => {
+    console.log(
+      "🔄 useSignatureHistory: Loading from localStorage on mount..."
+    );
     const savedHistory = localStorage.getItem("signature-history");
+    console.log("🔄 useSignatureHistory: Found saved history:", savedHistory);
     if (savedHistory) {
       try {
-        setHistory(JSON.parse(savedHistory));
+        const parsedHistory = JSON.parse(savedHistory);
+        console.log("🔄 useSignatureHistory: Parsed history:", parsedHistory);
+        setHistory(parsedHistory);
       } catch (error) {
         console.error("Failed to load signature history:", error);
       }
     }
+    setIsInitialized(true);
   }, []);
 
-  // Save history to localStorage whenever it changes
+  // Save history to localStorage whenever it changes (but not on initial load)
   useEffect(() => {
+    if (!isInitialized) {
+      console.log(
+        "💾 useSignatureHistory: Skipping save during initialization"
+      );
+      return;
+    }
+
+    console.log("💾 useSignatureHistory: Saving to localStorage:", history);
     localStorage.setItem("signature-history", JSON.stringify(history));
-  }, [history]);
+    console.log(
+      "💾 useSignatureHistory: Saved. Current localStorage:",
+      localStorage.getItem("signature-history")
+    );
+  }, [history, isInitialized]);
 
   const addSignature = (message: string, signature: string, signer: string) => {
     const newItem: SignatureHistoryItem = {
@@ -40,7 +60,19 @@ export const useSignatureHistory = () => {
       timestamp: Date.now(),
     };
 
-    setHistory((prev) => [newItem, ...prev]);
+    console.log("📝 useSignatureHistory: Adding new item:", newItem);
+    setHistory((prev) => {
+      const newHistory = [newItem, ...prev];
+      console.log("📝 useSignatureHistory: New history array:", newHistory);
+
+      // Immediately save to localStorage
+      console.log(
+        "💾 useSignatureHistory: Immediately saving new history to localStorage"
+      );
+      localStorage.setItem("signature-history", JSON.stringify(newHistory));
+
+      return newHistory;
+    });
     return newItem.id;
   };
 
