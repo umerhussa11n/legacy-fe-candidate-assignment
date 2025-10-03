@@ -1,60 +1,115 @@
-## 📦 shared-packages
+# Shared Package
 
-This directory serves as the **Single Source of Truth** for reusable code, configurations, and core definitions utilized across the entire monorepo, including both the Frontend (React/TypeScript) and Backend (Node/Express) services.
+TypeScript types, utilities, and constants shared across the Web3 Signer & Verifier monorepo.
 
-The primary goal of this package is to prevent duplication, enforce consistency, and simplify maintenance for critical, cross-cutting logic.
+## 📦 Exports
 
----
+### Types
 
-### 📚 Contents and Purpose
+```typescript
+// Authentication
+export interface WalletUser {
+  address: string;
+  isAuthenticated: boolean;
+}
 
-This package typically houses logic that is decoupled from any specific host environment (browser or server):
+export interface AuthContextType {
+  user: WalletUser | null;
+  isLoading: boolean;
+  login: () => Promise<void>;
+  logout: () => void;
+  signMessage: (message: string) => Promise<string>;
+  isConnected: boolean;
+}
 
-| Folder/File          | Purpose                                         | Example Contents                                      |
-| :------------------- | :---------------------------------------------- | :---------------------------------------------------- |
-| **`jest.config.js`** | The base configuration for all project testing. | Shared preset for `ts-jest` and module resolution.    |
-| **`tsconfig.json`**  | The base TypeScript compiler configuration.     | Enforces strict mode and consistent compiler options. |
+// Signature Operations
+export interface VerificationRequest {
+  message: string;
+  signature: string;
+}
 
----
+export interface VerificationResponse {
+  isValid: boolean;
+  signer: string;
+  originalMessage: string;
+}
 
-## 🛠 Configuration Inheritance
+export interface SignedMessage {
+  message: string;
+  signature: string;
+  timestamp: number;
+  signer: string;
+}
 
-To maintain consistency and avoid configuration drift, all packages in this monorepo **must** inherit their primary configurations from this shared package.
-
-### TypeScript (`tsconfig.json`)
-
-In any project package's `tsconfig.json`, ensure you use the `extends` property:
-
-```json
-// packages/frontend/tsconfig.json or packages/backend/tsconfig.json
-{
-  "extends": "../../shared-packages/tsconfig.json",
-  "compilerOptions": {
-    // Add any package-specific compiler options here
-    "jsx": "react-jsx"
-  }
-  // ... other project-specific settings
+// API Responses
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  timestamp: string;
 }
 ```
 
-### Jest (jest.config.js)
+### Utilities
 
-In any project package's jest.config.js, ensure you use the preset property:
+```typescript
+// Validation
+export const validateMessage = (message: string): boolean
 
-```// packages/backend/jest.config.js or packages/frontend/jest.config.js
-module.exports = {
-  // Use the shared configuration as a base
-  preset: '../../shared-packages/jest.config.js',
+// Formatting
+export const truncateAddress = (address: string): string
+export const formatTimestamp = (timestamp: number): string
+```
 
-  // Add any package-specific settings here
-  testEnvironment: 'node', // Use 'jsdom' for frontend packages
+### Constants
+
+```typescript
+export const API_ENDPOINTS = {
+  VERIFY_SIGNATURE: "/api/verify-signature",
+};
+
+export const ERROR_MESSAGES = {
+  VERIFICATION_FAILED: "Signature verification failed",
+  WALLET_NOT_CONNECTED: "Wallet not connected",
+  EMPTY_MESSAGE: "Message cannot be empty",
 };
 ```
 
-### ✅ Testing Shared Logic
+## 🛠️ Development
 
-Since the code in shared-packages is critical to the stability of the entire system, every exported utility, type helper, and piece of business logic must be accompanied by a dedicated unit test.
+```bash
+# Build package
+yarn build
 
-Tests for shared code should be located within the same package, typically in src/**tests** or alongside the source file (e.g., utils/foo.test.ts).
+# Run tests
+yarn test
 
-Note: Do not add environment-specific code (e.g., React components, database connection logic) to this folder. The code here must remain decoupled and reusable.
+# Type check
+yarn type-check
+
+# Lint
+yarn lint
+```
+
+## 📁 Structure
+
+```
+src/
+├── types/
+│   ├── auth.ts          # Authentication interfaces
+│   ├── signature.ts     # Signature operation types
+│   └── api.ts          # API response types
+├── utils/
+│   ├── validation.ts    # Input validation helpers
+│   └── formatters.ts   # Display formatting utilities
+├── constants/
+│   └── index.ts        # API endpoints & error messages
+└── index.ts            # Main export file
+```
+
+## 🎯 Design Principles
+
+- **Minimal & Focused** - Only essential types and utilities
+- **Type Safety** - Complete TypeScript coverage
+- **Reusable** - Shared across frontend and backend
+- **Simple** - No over-engineering or complex abstractions

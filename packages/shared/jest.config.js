@@ -1,13 +1,11 @@
+/** @type {import('jest').Config} */
+const baseConfig = require("../../jest.config.base.js");
+
 module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'node',
-  roots: ['<rootDir>/src'],
-  testMatch: ['**/__tests__/**/*.test.ts', '**/?(*.)+(spec|test).ts'],
-  collectCoverageFrom: [
-    'src/**/*.{ts,tsx}',
-    '!src/**/*.d.ts',
-    '!src/index.ts',
-  ],
+  ...baseConfig,
+  testEnvironment: "node",
+  roots: ["<rootDir>/src"],
+  collectCoverageFrom: [...baseConfig.collectCoverageFrom, "!src/index.ts"],
   coverageThreshold: {
     global: {
       branches: 80,
