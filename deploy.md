@@ -5,8 +5,8 @@
 1. **Go to [Render.com](https://render.com)** and sign up/login
 2. **Connect your GitHub account**
 3. **Create New Web Service**
-   - Repository: `DM-SaaS/legacy-fe-candidate-assignment`
-   - Branch: `feature-setup-signer-verifier` (or `main`)
+   - Repository: `umerhussa11n/legacy-fe-candidate-assignment`
+   - Branch: `feature-setup-signer-verifier`
    - Root Directory: `apps/backend`
 4. **Render will auto-detect settings from `render.yaml`, or manually configure:**
 
