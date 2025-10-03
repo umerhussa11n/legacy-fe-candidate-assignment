@@ -17,15 +17,10 @@ export const useSignatureHistory = () => {
 
   // Load history from localStorage on mount
   useEffect(() => {
-    console.log(
-      "🔄 useSignatureHistory: Loading from localStorage on mount..."
-    );
     const savedHistory = localStorage.getItem("signature-history");
-    console.log("🔄 useSignatureHistory: Found saved history:", savedHistory);
     if (savedHistory) {
       try {
         const parsedHistory = JSON.parse(savedHistory);
-        console.log("🔄 useSignatureHistory: Parsed history:", parsedHistory);
         setHistory(parsedHistory);
       } catch (error) {
         console.error("Failed to load signature history:", error);
