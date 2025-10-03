@@ -12,7 +12,7 @@ export interface SignatureHistoryItem extends SignedMessage {
 
 export const useSignatureHistory = () => {
   const [history, setHistory] = useState<SignatureHistoryItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
 
   // Load history from localStorage on mount
   useEffect(() => {
