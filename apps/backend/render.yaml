@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: web3-signer-backend
+    env: node
+    plan: free
+    buildCommand: yarn install --frozen-lockfile && yarn build
+    startCommand: yarn start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        fromService:
+          type: web
+          name: web3-signer-backend
+          property: port
+      - key: DYNAMIC_ENVIRONMENT_ID
+        value: 3492aa47-61f0-4bda-ab2f-5bd3ef9fb701
+    healthCheckPath: /api/health
